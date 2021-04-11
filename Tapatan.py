@@ -1,7 +1,5 @@
 # Marwane Grosjacques
 # Eryne Guenet
-<<<<<<< HEAD
-<<<<<<< HEAD
 # Lou Delattre
 =======
 # Sarah Louis El Khoury
