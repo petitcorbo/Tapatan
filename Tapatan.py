@@ -30,6 +30,11 @@ couleur_intersection = "grey"
 x, y = Longueur / 2, Hauteur / 2 # Milieu du canevas
 disposition_jetons = []
 compteur = 0
+tab = [
+    1, 2, 0,
+    0, 0, 2,
+    1, 2, 1
+]
 
 ## Fonctions ##
 
@@ -57,6 +62,19 @@ def creer_intersections():
     intersections.append(Canevas.create_oval(Longueur-50-rayon,Hauteur-50-rayon,Longueur-50+rayon,Hauteur-50+rayon, fill=couleur_intersection,width=4))
     return intersections
 
+
+def actualiser_tableau():
+    global disposition_jetons
+    for p in disposition_jetons:
+        Canevas.delete(p)
+    disposition_jetons = []
+    for i, pion in enumerate(tab):
+        if pion == 1:
+            p = Canevas.create_oval(Canevas.coords(intersections[i]), fill="red")
+            disposition_jetons.append(p)
+        elif pion == 2:
+            p = Canevas.create_oval(Canevas.coords(intersections[i]), fill="blue")
+            disposition_jetons.append(p)
 
 
 # Placement #
@@ -146,6 +164,16 @@ bouton_quitter.grid(row=4, column=1, sticky="ew")
 
 tour = tk.Label(Mafenetre, text="C'est au tour du joueur 1",  font=("bold", 30))
 tour.grid(row=0, column=0)
+
+actualiser_tableau()
+
+tab = [
+    1, 0, 0,
+    0, 0, 0,
+    0, 0, 0
+]
+
+Mafenetre.after(1000, actualiser_tableau)
 
 ## Fin ##
 Mafenetre.mainloop()
