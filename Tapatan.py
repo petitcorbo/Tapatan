@@ -51,7 +51,7 @@ def creer_intersections():
     intersections.append(Canevas.create_oval(Longueur-50-rayon,50-rayon,Longueur-50+rayon,50+rayon, fill=couleur_intersection,width=4))
     intersections.append(Canevas.create_oval(50-rayon,y-rayon, 50+rayon, y+rayon, fill=couleur_intersection,width=4))
     intersections.append(Canevas.create_oval(x-rayon,y-rayon,x+rayon, y+rayon, fill=couleur_intersection,width=4))
-    intersections.append(Canevas.create_oval(Longueur-50-rayon,y-rayon,Longueur-50+rayon,y+rayon, fill="ouleur_intersection,width=4))
+    intersections.append(Canevas.create_oval(Longueur-50-rayon,y-rayon,Longueur-50+rayon,y+rayon, fill=ouleur_intersection,width=4))
     intersections.append(Canevas.create_oval(50-rayon,Hauteur-50-rayon, 50+rayon, Hauteur-50+rayon, fill=couleur_intersection,width=4))
     intersections.append(Canevas.create_oval(x-rayon,Hauteur-50-rayon,x+rayon, Hauteur-50+rayon, fill=couleur_intersection,width=4))
     intersections.append(Canevas.create_oval(Longueur-50-rayon,Hauteur-50-rayon,Longueur-50+rayon,Hauteur-50+rayon, fill=couleur_intersection,width=4))
