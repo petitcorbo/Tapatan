@@ -29,11 +29,22 @@ couleur_intersection = "grey"
 
 x, y = Longueur / 2, Hauteur / 2 # Milieu du canevas
 disposition_jetons = []
-compteur = 0
-tab = [
-    1, 2, 0,
-    0, 0, 2,
-    1, 2, 1
+
+deplacement_possible = [
+    [1, 3, 4], [0, 2, 4], [1, 5, 4],
+    [0, 6, 4], [0, 1, 2, 3, 5, 6, 7, 8], [2, 8, 4],
+    [3, 7, 4], [6, 8, 4], [5, 7, 4]
+]
+
+victoire_possible = [
+    (0, 1, 2),
+    (3, 4, 5),
+    (6, 7, 8),
+    (0, 3, 6),
+    (1, 4, 7),
+    (2, 5, 8),
+    (0, 4, 8),
+    (2, 4, 6)
 ]
 
 ## Fonctions ##
@@ -77,6 +88,26 @@ def actualiser_tableau():
             disposition_jetons.append(p)
 
 
+def changer_joueur():
+    global joueur
+    if joueur == 1:
+        joueur = 2
+    elif joueur == 2:
+        joueur = 1
+
+
+def tour():
+    while True:
+        if tab.count(0) > 3:
+            placement(tab, sur=sur)
+        else:
+            deplacement(tab, de=de, a=a)
+        
+        if verifie_victoire():
+            break
+        changer_joueur()
+
+
 # Placement #
 
 def placement(event):
@@ -96,9 +127,30 @@ def placement(event):
             tour.config(text="C'est au tour du joueur "+ str(compteur%2 +1))
 
 
+def placement(sur=0):
+    if tab[sur] == 0:
+        tab[sur] = joueur
+
+
 # Deplacement #
 
-def deplacement():
+def deplacement(de=0, a=1):
+    if tab[a] == 0 and tab[de] == joueur:
+        if a in deplacement_possible[de] :
+            tab[a] = tab[de]
+            tab[de] = 0
+
+
+# Victoire / Egalité #
+
+def verifie_victoire():
+    for sub in victoire_possible:
+        if tab[sub[0]] == tab[sub[1]] == tab[sub[2]] and tab[sub[0]] != 0:
+            print("victoire")
+            return True
+
+
+def verifie_egalite():
     pass
 
 
@@ -118,12 +170,15 @@ def charger():
 
 def recommencer():
     """Recommence une nouvelle partie"""
-    global disposition_jetons, compteur, intersections
-    compteur = 0
-    for jeton in disposition_jetons:
-        Canevas.delete(jeton)
-    intersections = intersections_bis.copy()
-    tour.config(text="C'est au tour du joueur 1")
+    global joueur, tab
+    joueur = 1
+    tab = [
+        0, 0, 0,
+        0, 0, 0,
+        0, 0, 0
+    ]
+    actualiser_tableau()
+    label_tour.config(text="C'est au tour du joueur 1")
 
 
 def quitter():
@@ -162,18 +217,10 @@ bouton_recommencer.grid(row=3, column=1, sticky="ew")
 bouton_quitter = tk.Button(Mafenetre, text="Quitter", font=("bold", 30), command=quitter, relief="groove")
 bouton_quitter.grid(row=4, column=1, sticky="ew")
 
-tour = tk.Label(Mafenetre, text="C'est au tour du joueur 1",  font=("bold", 30))
-tour.grid(row=0, column=0)
+label_tour = tk.Label(Mafenetre, text="C'est au tour du joueur 1",  font=("bold", 30))
+label_tour.grid(row=0, column=0)
 
-actualiser_tableau()
-
-tab = [
-    1, 0, 0,
-    0, 0, 0,
-    0, 0, 0
-]
-
-Mafenetre.after(1000, actualiser_tableau)
+recommencer()
 
 ## Fin ##
 Mafenetre.mainloop()
