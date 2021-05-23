@@ -24,6 +24,7 @@ rayon = 30 # Rayon des intersections
 
 couleur_canevas = "white"
 couleur_intersection = "grey"
+couleur_joueurs = {1: "red", 2: "blue"}
 
 ## Variables ##
 
@@ -81,11 +82,15 @@ def actualiser_tableau():
     disposition_jetons = []
     for i, pion in enumerate(tab):
         if pion == 1:
-            p = Canevas.create_oval(Canevas.coords(intersections[i]), fill="red")
+            p = Canevas.create_oval(Canevas.coords(intersections[i]), fill="red", width=4, tags="pion")
             disposition_jetons.append(p)
         elif pion == 2:
-            p = Canevas.create_oval(Canevas.coords(intersections[i]), fill="blue")
+            p = Canevas.create_oval(Canevas.coords(intersections[i]), fill="blue", width=4, tags="pion")
             disposition_jetons.append(p)
+
+
+def actualiser_historique():
+    historique.append(tab.copy())
 
 
 def changer_joueur():
@@ -97,48 +102,59 @@ def changer_joueur():
 
 
 def tour():
-    while True:
-        if tab.count(0) > 3:
-            placement(tab, sur=sur)
-        else:
-            deplacement(tab, de=de, a=a)
-        
-        if verifie_victoire():
-            break
-        changer_joueur()
+    actualiser_tableau()
+    if verifie_victoire():
+        Mafenetre.after(2000, recommencer_manche)
+        return
+    actualiser_historique()
+    if verifie_egalite():
+        Mafenetre.after(2000, recommencer_manche)
+        return
+    changer_joueur()
+    label_tour.config(text="C'est au tour du joueur " + str(joueur), fg=couleur_joueurs[joueur])
+    if tab.count(0) == 3:
+        Canevas.unbind("<Button-1>")
+        Canevas.tag_bind("pion", "<Button-1>", deplacement_clic)
 
 
 # Placement #
 
-def placement(event):
+def clic_placement(event):
     """les joueurs posent un jeton a tour de role sur une intersection libre du plateau"""
-    global compteur, disposition_jetons
-    
-    if compteur%2 != 0:
-        couleurjeton = "blue"
-    else:
-        couleurjeton = "red"
-    
-    for inter in intersections:
-        if Canevas.coords(inter)[0] < event.x < Canevas.coords(inter)[2] and Canevas.coords(inter)[1] < event.y < Canevas.coords(inter)[3] and compteur < 6:
-            compteur += 1
-            disposition_jetons.append(Canevas.create_oval(Canevas.coords(inter), fill=couleurjeton))
-            intersections.remove(inter)
-            tour.config(text="C'est au tour du joueur "+ str(compteur%2 +1))
+    for i, inter in enumerate(intersections):
+        if Canevas.coords(inter)[0] < event.x < Canevas.coords(inter)[2] and Canevas.coords(inter)[1] < event.y < Canevas.coords(inter)[3]:
+            placement(i)
 
 
 def placement(sur=0):
     if tab[sur] == 0:
         tab[sur] = joueur
+        tour()
 
 
 # Deplacement #
+
+def deplacement_clic(event):
+    actualiser_tableau()
+    for i, inter in enumerate(intersections):
+        if Canevas.coords(inter)[0] < event.x < Canevas.coords(inter)[2] and Canevas.coords(inter)[1] < event.y < Canevas.coords(inter)[3]:
+            pion = Canevas.find_closest(event.x, event.y)[0]
+            Canevas.itemconfig(pion, outline="green")
+            Canevas.bind("<Button-1>", lambda event, i=i: deplacement_clic_bis(event, i))
+
+
+def deplacement_clic_bis(event, i):
+    for j, inter in enumerate(intersections):
+        if Canevas.coords(inter)[0] < event.x < Canevas.coords(inter)[2] and Canevas.coords(inter)[1] < event.y < Canevas.coords(inter)[3]:
+            deplacement(i, j)
+
 
 def deplacement(de=0, a=1):
     if tab[a] == 0 and tab[de] == joueur:
         if a in deplacement_possible[de] :
             tab[a] = tab[de]
             tab[de] = 0
+            tour()
 
 
 # Victoire / Egalité #
@@ -146,13 +162,15 @@ def deplacement(de=0, a=1):
 def verifie_victoire():
     for sub in victoire_possible:
         if tab[sub[0]] == tab[sub[1]] == tab[sub[2]] and tab[sub[0]] != 0:
-            print("victoire")
+            label_tour.config(text="Victoire du joueur " + str(joueur), fg=couleur_joueurs[joueur])
+            score[joueur-1] += 1
             return True
 
 
 def verifie_egalite():
-    pass
-
+    if historique.count(tab) == 3:
+            label_tour.config(text="Egalité")
+            return True
 
 # Sauvegarde / Chargement #
 
@@ -168,17 +186,27 @@ def charger():
 
 # Menu #
 
-def recommencer():
+def recommencer_partie():
     """Recommence une nouvelle partie"""
-    global joueur, tab
+    global score
+    score = [0, 0]
+    recommencer_manche()
+
+
+def recommencer_manche():
+    """Recommence une nouvelle manche"""
+    global joueur, tab, historique
     joueur = 1
     tab = [
         0, 0, 0,
         0, 0, 0,
         0, 0, 0
     ]
+    historique = []
     actualiser_tableau()
-    label_tour.config(text="C'est au tour du joueur 1")
+    label_tour.config(text="C'est au tour du joueur " + str(joueur), fg=couleur_joueurs[joueur])
+    label_score_1.config(text="Joueur 1: " + str(score[0]))
+    label_score_2.config(text="Joueur 2: " + str(score[1]))
 
 
 def quitter():
@@ -193,8 +221,8 @@ Mafenetre.resizable(False, False)
 
 # Canevas #
 Canevas = tk.Canvas(Mafenetre, width=Longueur, height=Hauteur, bg=couleur_canevas)
-Canevas.bind("<Button-1>", placement)
-Canevas.grid(row=1, column=0, rowspan=5)
+Canevas.bind("<Button-1>", clic_placement)
+Canevas.grid(row=1, column=0, rowspan=7)
 
 # Plateau #
 creer_plateau()
@@ -211,7 +239,7 @@ bouton_sauvegarder.grid(row=1, column=1, sticky="ew")
 bouton_recharger = tk.Button(Mafenetre, text="Recharger", font=("bold", 30), command=charger, relief="groove")
 bouton_recharger.grid(row=2, column=1, sticky="ew")
 
-bouton_recommencer = tk.Button(Mafenetre, text="Recommencer", font=("bold", 30), command=recommencer, relief="groove")
+bouton_recommencer = tk.Button(Mafenetre, text="Recommencer", font=("bold", 30), command=recommencer_partie, relief="groove")
 bouton_recommencer.grid(row=3, column=1, sticky="ew")
 
 bouton_quitter = tk.Button(Mafenetre, text="Quitter", font=("bold", 30), command=quitter, relief="groove")
@@ -220,7 +248,17 @@ bouton_quitter.grid(row=4, column=1, sticky="ew")
 label_tour = tk.Label(Mafenetre, text="C'est au tour du joueur 1",  font=("bold", 30))
 label_tour.grid(row=0, column=0)
 
-recommencer()
+label_score = tk.Label(Mafenetre, text="SCORE",  font=("bold", 30, "underline"))
+label_score.grid(row=5, column=1)
+
+label_score_2 = tk.Label(Mafenetre, text="Joueur 1: 0",  font=("bold", 30))
+label_score_2.grid(row=6, column=1)
+
+label_score_1 = tk.Label(Mafenetre, text="Joueur 2: 0",  font=("bold", 30))
+label_score_1.grid(row=7, column=1)
+
+
+recommencer_partie()
 
 ## Fin ##
 Mafenetre.mainloop()
