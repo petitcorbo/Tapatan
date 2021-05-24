@@ -39,6 +39,8 @@ Une partie est emportée au bout de 3 manches sauf égalité.
 * Pour sauvegarder une partie, cliquer sur le bouton "esc" puis **"Sauvegarder"** pour enregistrer la partie sur votre ordinateur.
 * Pour reprendre la partie, cliquer sur **"Charger"** dans le menu en sélectionnant la partie sauvegardée.
 
+Le fichier "backend.py" n'est pas à prendre en compte.
+
 ## Auteurs
 
 Marwane Grosjacques (22006204)
@@ -50,3 +52,5 @@ Sarah Louis El Khoury (22003684)
 Eryne Guenet (22003662)
 
 Emma Leroy Pardonche (22001732)
+
+**NB:** Lou Dellatre n'a pas participé au projet.
