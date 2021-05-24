@@ -8,7 +8,15 @@
 # Emma Leroy pardonche  #
 #########################
 
-'https://github.com/uvsq22006204/Tapatan'
+"https://github.com/uvsq22006204/Tapatan"
+
+'''
+[0]–[1]–[2]
+ | \ | / |
+[3]–[4]–[5]
+ | / | \ |
+[6]–[7]–[8]
+'''
 
 # Importation #
 
@@ -30,6 +38,7 @@ couleur_bg = 'black'
 couleur_afg = 'white'
 couleur_abg = 'grey'
 couleur_intersection = 'black'
+
 bouton_bd = 3
 bouton_relief = 'groove'
 font = ('bold', '30')
@@ -60,6 +69,7 @@ victoire_possible = [
 
 
 def creer_plateau():
+    '''Crée les lignes du plateau'''
     s = taille
     w = epaisseur
 
@@ -71,9 +81,11 @@ def creer_plateau():
 
 
 def creer_intersections():
+    '''Crée les intersections où l'on peut placer les pions'''
     s = taille
     w = epaisseur
     r = rayon
+
     intersections = []
     for n in range(9):
         x_o, y_o = x - s + s * (n % 3), y - s + s * (n // 3)
@@ -83,11 +95,13 @@ def creer_intersections():
 
 
 def actualiser_tableau():
+    '''Actualise le tableau selon la variable tab'''
     global disposition_jetons
-    for p in disposition_jetons:
+    for p in disposition_jetons:  # Enleve tous les pions
         Canevas.delete(p)
+
     disposition_jetons = []
-    for i, pion in enumerate(tab):
+    for i, pion in enumerate(tab):  # Pose tous les pions
         if pion == 1:
             p = Canevas.create_oval(Canevas.coords(intersections[i]), outline=couleur_fg, fill="red", width=2, tags="pion")
             disposition_jetons.append(p)
@@ -101,6 +115,7 @@ def actualiser_historique():
 
 
 def changer_joueur():
+    '''Passe du joueur 1 au joueur 2 et inversement'''
     global joueur
     if joueur == 1:
         joueur = 2
@@ -109,8 +124,11 @@ def changer_joueur():
 
 
 def tour():
+    '''Assemble les différentes fonctions nécessaires pour faire un tour'''
     actualiser_tableau()
     if verifie_victoire():
+        Canevas.unbind('<Button-1>')
+        Canevas.tag_unbind('pion', '<Button-1>')
         score[joueur - 1] += 1
 
         if score[joueur - 1] == 3:
@@ -123,6 +141,9 @@ def tour():
 
     actualiser_historique()
     if verifie_egalite():
+        Canevas.unbind('<Button-1>')
+        Canevas.tag_unbind('pion', '<Button-1>')
+        Canevas.itemconfig(label_tour, text="Egalité", fill=couleur_fg)
         racine.after(2000, recommencer_manche)
         return
 
@@ -141,13 +162,14 @@ def tour():
 
 
 def clic_placement(event):
-    """les joueurs posent un jeton a tour de role sur une intersection libre du plateau"""
+    '''Recupere l'emplacement cliqué puis place un pion à cet emplacement'''
     for i, inter in enumerate(intersections):
         if Canevas.coords(inter)[0] < event.x < Canevas.coords(inter)[2] and Canevas.coords(inter)[1] < event.y < Canevas.coords(inter)[3]:
             placement(i)
 
 
 def placement(sur=0):
+    '''Place le pion d'un joueur a l'emplacement donné si possible'''
     if tab[sur] == 0:
         tab[sur] = joueur
         tour()
@@ -157,22 +179,26 @@ def placement(sur=0):
 
 # Deplacement #
 
+
 def deplacement_clic(event):
+    '''Premier clique: Recupere l'emplacement initial d'un pion puis attend un deuxième clique'''
     actualiser_tableau()
     for i, inter in enumerate(intersections):
         if Canevas.coords(inter)[0] < event.x < Canevas.coords(inter)[2] and Canevas.coords(inter)[1] < event.y < Canevas.coords(inter)[3]:
             pion = Canevas.find_closest(event.x, event.y)[0]
-            Canevas.itemconfig(pion, outline="green")
+            Canevas.itemconfig(pion, outline="green2")
             Canevas.bind("<Button-1>", lambda event, i=i: deplacement_clic_bis(event, i))
 
 
 def deplacement_clic_bis(event, i):
+    '''Deuxième clique: recupere l'emplacement final et deplace le pion'''
     for j, inter in enumerate(intersections):
         if Canevas.coords(inter)[0] < event.x < Canevas.coords(inter)[2] and Canevas.coords(inter)[1] < event.y < Canevas.coords(inter)[3]:
             deplacement(i, j)
 
 
 def deplacement(de=0, a=1):
+    '''Deplace un pion choisi a l'emplacement donné si possible'''
     if tab[a] == 0 and tab[de] == joueur:
         if a in deplacement_possible[de]:
             tab[a] = tab[de]
@@ -184,22 +210,25 @@ def deplacement(de=0, a=1):
 
 # Victoire / Egalité #
 
+
 def verifie_victoire():
+    '''Renvoie True si il y a victoire'''
     for sub in victoire_possible:
         if tab[sub[0]] == tab[sub[1]] == tab[sub[2]] and tab[sub[0]] != 0:
             return True
 
 
 def verifie_egalite():
+    '''Renvoie True si il y a egalité'''
     if historique.count(tab) == 3:
-        Canevas.itemconfig(label_tour, text="Egalité")
         return True
+
 
 # Sauvegarde / Chargement #
 
 
 def sauvegarder():
-    """Sauvegarde la partie en cour"""
+    '''Sauvegarde la partie en cours dans un fichier'''
     pys = filedialog.asksaveasfile(mode='w', defaultextension='.pys')
     if pys is None:
         return
@@ -214,7 +243,7 @@ def sauvegarder():
 
 
 def charger():
-    """Charge une partie à partir d'un fichier"""
+    '''Charge une partie à partir d'un fichier'''
     global score, joueur, tab, historique
 
     pys = filedialog.askopenfile(title="Select save file", filetypes=(("Save files", '*.pys'), ("all files", '*.*')))
@@ -242,8 +271,14 @@ def charger():
 
 
 def IA():
-    A = [i for i, sub in enumerate(tab) if sub == joueur]
-    X = [i for i, sub in enumerate(tab) if sub == (joueur % 2 + 1)]
+    '''
+    IA:
+    Détecte automatiquement si c'est la phase de placement ou de déplacement;
+    L'IA joue un coup gagnant ou bloque un coup gagnant si il y en a;
+    Sinon elle joue un coup aléatoire
+    '''
+    A = [i for i, sub in enumerate(tab) if sub == joueur]  # Pions de l'IA
+    X = [i for i, sub in enumerate(tab) if sub == (joueur % 2 + 1)]  # Pions du joueur adverse
 
     if tab.count(joueur) < 3:  # Placement
 
@@ -254,7 +289,7 @@ def IA():
 
                 for pos in sub:
                     if placement(pos):
-                        print("AI wins")
+                        print("IA gagne")
                         return
 
             inter = list(set(X).intersection(sub))
@@ -262,21 +297,21 @@ def IA():
 
                 for pos in sub:
                     if placement(pos):
-                        print("AI blocks a win")
+                        print("IA bloque une victoire")
                         return
 
         else:
-            print("AI places a pawn randomly")
+            print("IA joue aléatoirement")
             pos = 4
             while not placement(pos):
                 pos = random.randint(0, 8)
 
-    else:  # Movement
+    else:  # Deplacement
 
         for sub in victoire_possible:
 
             inter = list(set(A).intersection(sub))
-            if len(inter) == 2:
+            if len(inter) == 2:  # L'IA regarde si elle a une victoire proche
 
                 for pos in A:
                     for f_p in sub:
@@ -284,32 +319,21 @@ def IA():
                             for move in deplacement_possible[pos]:
                                 if move == f_p:
                                     if deplacement(pos, move):
-                                        print("AI wins")
+                                        print("IA gagne")
                                         return
 
             inter = list(set(X).intersection(sub))
-            if len(inter) == 2:
+            if len(inter) == 2:  # L'IA regarde si l'adversaire a une victoire proche
 
                 for pos in A:
                     for f_p in sub:
                         if f_p not in inter:
                             if deplacement(pos, f_p):
-                                print("AI blocks a win")
+                                print("IA bloque une victoire")
                                 return
 
-                for posX in X:
-                    if posX not in inter:
-                        for moveX in deplacement_possible[posX]:
-                            if moveX in sub and moveX not in inter:
-                                for posA in A:
-                                    for moveA in deplacement_possible[posA]:
-                                        if moveA == moveX:
-                                            if deplacement(pos, f_p):
-                                                print("AI blocks a win")
-                                                return
-
         else:
-            print("AI moves a pawn randomly")
+            print("IA joue aléatoirement")
             pos = random.choices(A)[0]
             move = random.choices(deplacement_possible[pos])[0]
 
@@ -321,14 +345,14 @@ def IA():
 # Menu #
 
 def recommencer_partie():
-    """Recommence une nouvelle partie"""
+    '''Recommence une nouvelle partie'''
     global score
     score = [0, 0]
     recommencer_manche()
 
 
 def recommencer_manche():
-    """Recommence une nouvelle manche"""
+    '''Recommence une nouvelle manche'''
     global joueur, tab, historique
     if 'historique' in globals():
         joueur = (len(historique) % 2 + joueur % 2 + 1) % 2 + 1
@@ -347,6 +371,7 @@ def recommencer_manche():
 
 
 def commencer(continuer=False):
+    '''Commence ou continue une partie'''
     global intersections, intersections_bis
     global label_tour, label_score_1, label_score_2
     frame_main.grid_forget()
@@ -370,22 +395,27 @@ def commencer(continuer=False):
 
 
 def reprendre():
+    '''Quitte le menu pause'''
     frame_pause.grid_forget()
 
 
 def menu():
+    '''Reviens au menu principal'''
     racine.unbind('<Escape>')
     Canevas.unbind('<Button-1>')
+    Canevas.tag_unbind('pion', '<Button-1>')
     Canevas.delete('all')
     frame_pause.grid_forget()
     frame_main.grid(row=0, column=0)
 
 
 def quitter():
+    '''Quitte le jeu'''
     racine.quit()
 
 
 def main_menu():
+    '''Création du menu principal'''
     global frame_main
     frame_main = tk.Frame(racine, bg=couleur_bg)
 
@@ -419,6 +449,7 @@ def main_menu():
 
 
 def options():
+    '''Création du menu d'options'''
     global IA_1, IA_2
     IA_1, IA_2 = tk.IntVar(), tk.IntVar()
 
@@ -442,6 +473,7 @@ def options():
 
 
 def pause():
+    '''Création du menu pause'''
     global frame_pause
     frame_pause = tk.LabelFrame(racine, text="Pause", bg=couleur_bg, fg=couleur_fg, font=font)
 
@@ -473,7 +505,6 @@ def pause():
 
 racine = tk.Tk()
 racine.title("Tapatan")
-# racine.geometry(str(Longueur+4)+"x"+str(Hauteur+4))
 racine.resizable(False, False)
 
 Canevas = tk.Canvas(racine, width=Longueur, height=Hauteur, bg=couleur_bg, bd=0)
@@ -484,4 +515,3 @@ options()
 pause()
 
 racine.mainloop()
-
