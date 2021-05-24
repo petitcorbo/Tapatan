@@ -1,3 +1,4 @@
+##### Ce fichier n'est pas a prendre en compte #####
 
 # [0]–[1]–[2] #
 #  | \ | / |  #
