@@ -8,27 +8,35 @@
 # Emma Leroy pardonche  #
 #########################
 
-# https://github.com/uvsq22006204/Tapatan #
+'https://github.com/uvsq22006204/Tapatan'
 
-
-## Importation ##
+# Importation #
 
 import tkinter as tk
+from tkinter import filedialog
+import random
 
-## Parametres ##
+# Parametres #
 
-Longueur, Hauteur = 700, 700 # Du canevas
+Longueur, Hauteur = 700, 700  # Du canevas
 
-taille = 2 * Hauteur / 3 # Taille du plateau
-rayon = 30 # Rayon des intersections
+taille = 3 * Hauteur // 8  # Taille du plateau
+rayon = 25  # Rayon des intersections
+epaisseur = 2  # Des lignes
 
-couleur_canevas = "white"
-couleur_intersection = "grey"
 couleur_joueurs = {1: "red", 2: "blue"}
+couleur_fg = 'white'
+couleur_bg = 'black'
+couleur_afg = 'white'
+couleur_abg = 'grey'
+couleur_intersection = 'black'
+bouton_bd = 3
+bouton_relief = 'groove'
+font = ('bold', '30')
 
-## Variables ##
+# Variables #
 
-x, y = Longueur / 2, Hauteur / 2 # Milieu du canevas
+x, y = Longueur / 2, Hauteur / 2  # Milieu du canevas
 disposition_jetons = []
 
 deplacement_possible = [
@@ -48,30 +56,29 @@ victoire_possible = [
     (2, 4, 6)
 ]
 
-## Fonctions ##
+# Fonctions #
+
 
 def creer_plateau():
-    Canevas.create_line(50,y,Longueur-50,y,fill="black",width=4)
-    Canevas.create_line(50,50,Longueur-50,50,fill="black",width=4)
-    Canevas.create_line(50,50,50,Hauteur-50,fill="black",width=4)
-    Canevas.create_line(50,50,Longueur-50,Hauteur-50,fill="black",width=4)
-    Canevas.create_line(50,Hauteur-50,Longueur-50, Hauteur-50,fill="black",width=4)
-    Canevas.create_line(Longueur-50,50,Longueur-50,Hauteur-50,fill="black",width=4)
-    Canevas.create_line(50,Hauteur-50,Longueur-50,50,fill="black",width=4)
-    Canevas.create_line(x,50,x, Hauteur-50,fill="black",width=4)
+    s = taille
+    w = epaisseur
+
+    Canevas.create_rectangle(x - s, y - s, x + s, y + s, outline=couleur_fg, fill=couleur_bg, width=w)
+    Canevas.create_line(x, y - s, x, y + s, fill=couleur_fg, width=w)  # | #
+    Canevas.create_line(x - s, y, x + s, y, fill=couleur_fg, width=w)  # - #
+    Canevas.create_line(x - s, y + s, x + s, y - s, fill=couleur_fg, width=w)  # / #
+    Canevas.create_line(x - s, y - s, x + s, y + s, fill=couleur_fg, width=w)  # \ #
 
 
 def creer_intersections():
+    s = taille
+    w = epaisseur
+    r = rayon
     intersections = []
-    intersections.append(Canevas.create_oval(50-rayon,50-rayon, 50+rayon, 50+rayon, fill=couleur_intersection,width=4))
-    intersections.append(Canevas.create_oval(x-rayon,50-rayon,x+rayon, 50+rayon, fill=couleur_intersection,width=4))
-    intersections.append(Canevas.create_oval(Longueur-50-rayon,50-rayon,Longueur-50+rayon,50+rayon, fill=couleur_intersection,width=4))
-    intersections.append(Canevas.create_oval(50-rayon,y-rayon, 50+rayon, y+rayon, fill=couleur_intersection,width=4))
-    intersections.append(Canevas.create_oval(x-rayon,y-rayon,x+rayon, y+rayon, fill=couleur_intersection,width=4))
-    intersections.append(Canevas.create_oval(Longueur-50-rayon,y-rayon,Longueur-50+rayon,y+rayon, fill=couleur_intersection,width=4))
-    intersections.append(Canevas.create_oval(50-rayon,Hauteur-50-rayon, 50+rayon, Hauteur-50+rayon, fill=couleur_intersection,width=4))
-    intersections.append(Canevas.create_oval(x-rayon,Hauteur-50-rayon,x+rayon, Hauteur-50+rayon, fill=couleur_intersection,width=4))
-    intersections.append(Canevas.create_oval(Longueur-50-rayon,Hauteur-50-rayon,Longueur-50+rayon,Hauteur-50+rayon, fill=couleur_intersection,width=4))
+    for n in range(9):
+        x_o, y_o = x - s + s * (n % 3), y - s + s * (n // 3)
+        inter = Canevas.create_oval(x_o - r, y_o - r, x_o + r, y_o + r, outline=couleur_fg, fill=couleur_bg, width=w)
+        intersections.append(inter)
     return intersections
 
 
@@ -82,10 +89,10 @@ def actualiser_tableau():
     disposition_jetons = []
     for i, pion in enumerate(tab):
         if pion == 1:
-            p = Canevas.create_oval(Canevas.coords(intersections[i]), fill="red", width=4, tags="pion")
+            p = Canevas.create_oval(Canevas.coords(intersections[i]), outline=couleur_fg, fill="red", width=2, tags="pion")
             disposition_jetons.append(p)
         elif pion == 2:
-            p = Canevas.create_oval(Canevas.coords(intersections[i]), fill="blue", width=4, tags="pion")
+            p = Canevas.create_oval(Canevas.coords(intersections[i]), outline=couleur_fg, fill="blue", width=2, tags="pion")
             disposition_jetons.append(p)
 
 
@@ -104,20 +111,34 @@ def changer_joueur():
 def tour():
     actualiser_tableau()
     if verifie_victoire():
-        Mafenetre.after(2000, recommencer_manche)
+        score[joueur - 1] += 1
+
+        if score[joueur - 1] == 3:
+            Canevas.itemconfig(label_tour, text="Le joueur " + str(joueur) + " a gagné la partie!", fill=couleur_joueurs[joueur])
+            racine.after(2000, menu)
+        else:
+            Canevas.itemconfig(label_tour, text="Le joueur " + str(joueur) + " a gagné la manche.", fill=couleur_joueurs[joueur])
+            racine.after(2000, recommencer_manche)
         return
+
     actualiser_historique()
     if verifie_egalite():
-        Mafenetre.after(2000, recommencer_manche)
+        racine.after(2000, recommencer_manche)
         return
+
     changer_joueur()
-    label_tour.config(text="C'est au tour du joueur " + str(joueur), fg=couleur_joueurs[joueur])
-    if tab.count(0) == 3:
+    Canevas.itemconfig(label_tour, text="C'est au tour du joueur " + str(joueur), fill=couleur_joueurs[joueur])
+    if IA_1.get() and (joueur == 1):
+        IA()
+    elif IA_2.get() and (joueur == 2):
+        IA()
+    elif tab.count(0) == 3:
         Canevas.unbind("<Button-1>")
         Canevas.tag_bind("pion", "<Button-1>", deplacement_clic)
 
 
 # Placement #
+
 
 def clic_placement(event):
     """les joueurs posent un jeton a tour de role sur une intersection libre du plateau"""
@@ -130,6 +151,8 @@ def placement(sur=0):
     if tab[sur] == 0:
         tab[sur] = joueur
         tour()
+        return True
+    return False
 
 
 # Deplacement #
@@ -151,10 +174,12 @@ def deplacement_clic_bis(event, i):
 
 def deplacement(de=0, a=1):
     if tab[a] == 0 and tab[de] == joueur:
-        if a in deplacement_possible[de] :
+        if a in deplacement_possible[de]:
             tab[a] = tab[de]
             tab[de] = 0
             tour()
+            return True
+    return False
 
 
 # Victoire / Egalité #
@@ -162,26 +187,135 @@ def deplacement(de=0, a=1):
 def verifie_victoire():
     for sub in victoire_possible:
         if tab[sub[0]] == tab[sub[1]] == tab[sub[2]] and tab[sub[0]] != 0:
-            label_tour.config(text="Victoire du joueur " + str(joueur), fg=couleur_joueurs[joueur])
-            score[joueur-1] += 1
             return True
 
 
 def verifie_egalite():
     if historique.count(tab) == 3:
-            label_tour.config(text="Egalité")
-            return True
+        Canevas.itemconfig(label_tour, text="Egalité")
+        return True
 
 # Sauvegarde / Chargement #
 
+
 def sauvegarder():
     """Sauvegarde la partie en cour"""
-    pass
+    pys = filedialog.asksaveasfile(mode='w', defaultextension='.pys')
+    if pys is None:
+        return
+
+    pys.write(str(score[0]) + '\n')
+    pys.write(str(score[1]) + '\n')
+    pys.write(str(joueur) + '\n')
+    for sub in historique:
+        pys.write("".join([str(i) for i in sub]) + '\n')
+
+    pys.close()
 
 
 def charger():
-    """Charge une partie à partir d'unf fichier"""
-    pass
+    """Charge une partie à partir d'un fichier"""
+    global score, joueur, tab, historique
+
+    pys = filedialog.askopenfile(title="Select save file", filetypes=(("Save files", '*.pys'), ("all files", '*.*')))
+    if pys is None:
+        return
+    content = pys.readlines()
+
+    score = [int(content[0]), int(content[1])]
+    joueur = int(content[2])
+    historique = []
+    for sub in content[3:-1:]:
+        tab = [int(i) for i in sub.strip()]
+        actualiser_historique()
+    tab = [int(i) for i in content[-1].strip()]
+
+    pys.close()
+
+    commencer(True)
+    Canevas.bind('<Button-1>', clic_placement)
+    Canevas.itemconfig(label_score_1, text=score[0] * "|", fill=couleur_joueurs[1])
+    Canevas.itemconfig(label_score_2, text=score[1] * "|", fill=couleur_joueurs[2])
+
+
+# IA #
+
+
+def IA():
+    A = [i for i, sub in enumerate(tab) if sub == joueur]
+    X = [i for i, sub in enumerate(tab) if sub == (joueur % 2 + 1)]
+
+    if tab.count(joueur) < 3:  # Placement
+
+        for sub in victoire_possible:
+
+            inter = list(set(A).intersection(sub))
+            if len(inter) == 2:
+
+                for pos in sub:
+                    if placement(pos):
+                        print("AI wins")
+                        return
+
+            inter = list(set(X).intersection(sub))
+            if len(inter) == 2:
+
+                for pos in sub:
+                    if placement(pos):
+                        print("AI blocks a win")
+                        return
+
+        else:
+            print("AI places a pawn randomly")
+            pos = 4
+            while not placement(pos):
+                pos = random.randint(0, 8)
+
+    else:  # Movement
+
+        for sub in victoire_possible:
+
+            inter = list(set(A).intersection(sub))
+            if len(inter) == 2:
+
+                for pos in A:
+                    for f_p in sub:
+                        if pos not in inter and f_p not in inter:
+                            for move in deplacement_possible[pos]:
+                                if move == f_p:
+                                    if deplacement(pos, move):
+                                        print("AI wins")
+                                        return
+
+            inter = list(set(X).intersection(sub))
+            if len(inter) == 2:
+
+                for pos in A:
+                    for f_p in sub:
+                        if f_p not in inter:
+                            if deplacement(pos, f_p):
+                                print("AI blocks a win")
+                                return
+
+                for posX in X:
+                    if posX not in inter:
+                        for moveX in deplacement_possible[posX]:
+                            if moveX in sub and moveX not in inter:
+                                for posA in A:
+                                    for moveA in deplacement_possible[posA]:
+                                        if moveA == moveX:
+                                            if deplacement(pos, f_p):
+                                                print("AI blocks a win")
+                                                return
+
+        else:
+            print("AI moves a pawn randomly")
+            pos = random.choices(A)[0]
+            move = random.choices(deplacement_possible[pos])[0]
+
+            while not deplacement(pos, move):
+                pos = random.choices(A)[0]
+                move = random.choices(deplacement_possible[pos])[0]
 
 
 # Menu #
@@ -196,69 +330,158 @@ def recommencer_partie():
 def recommencer_manche():
     """Recommence une nouvelle manche"""
     global joueur, tab, historique
-    joueur = 1
+    if 'historique' in globals():
+        joueur = (len(historique) % 2 + joueur % 2 + 1) % 2 + 1
+    else:
+        joueur = 2
     tab = [
         0, 0, 0,
         0, 0, 0,
         0, 0, 0
     ]
+    Canevas.bind('<Button-1>', clic_placement)
+    Canevas.itemconfig(label_score_1, text=score[0] * "|", fill=couleur_joueurs[1])
+    Canevas.itemconfig(label_score_2, text=score[1] * "|", fill=couleur_joueurs[2])
     historique = []
-    actualiser_tableau()
-    label_tour.config(text="C'est au tour du joueur " + str(joueur), fg=couleur_joueurs[joueur])
-    label_score_1.config(text="Joueur 1: " + str(score[0]))
-    label_score_2.config(text="Joueur 2: " + str(score[1]))
+    tour()
+
+
+def commencer(continuer=False):
+    global intersections, intersections_bis
+    global label_tour, label_score_1, label_score_2
+    frame_main.grid_forget()
+
+    creer_plateau()
+    intersections = creer_intersections()
+    intersections_bis = intersections.copy()
+
+    label_tour = Canevas.create_text(x, 25, text="", font=font)
+    label_score_1 = Canevas.create_text(Longueur // 4, Hauteur - 30, text="|||", font=font, fill=couleur_bg)
+    Canevas.create_rectangle(Canevas.bbox(label_score_1), outline=couleur_fg)
+    label_score_2 = Canevas.create_text(3 * Longueur // 4, Hauteur - 30, text="|||", font=font, fill=couleur_bg)
+    Canevas.create_rectangle(Canevas.bbox(label_score_2), outline=couleur_fg)
+
+    racine.bind('<Escape>', lambda evt: frame_pause.grid(row=0, column=0))
+
+    if continuer:
+        tour()
+    else:
+        recommencer_partie()
+
+
+def reprendre():
+    frame_pause.grid_forget()
+
+
+def menu():
+    racine.unbind('<Escape>')
+    Canevas.unbind('<Button-1>')
+    Canevas.delete('all')
+    frame_pause.grid_forget()
+    frame_main.grid(row=0, column=0)
 
 
 def quitter():
-    Mafenetre.quit()
+    racine.quit()
 
 
-## GUI ##
+def main_menu():
+    global frame_main
+    frame_main = tk.Frame(racine, bg=couleur_bg)
 
-Mafenetre = tk.Tk()
-Mafenetre.title("Jeu du Tapatan")
-Mafenetre.resizable(False, False)
+    tk.Label(
+        frame_main, text="TAPATAN", bg=couleur_bg, fg=couleur_fg,
+        font=('Yu Gothic', '40', 'underline'), relief='flat', pady=20
+    ).grid(row=0, column=0, sticky='we')
 
-# Canevas #
-Canevas = tk.Canvas(Mafenetre, width=Longueur, height=Hauteur, bg=couleur_canevas)
-Canevas.bind("<Button-1>", clic_placement)
-Canevas.grid(row=1, column=0, rowspan=7)
+    tk.Button(
+        frame_main, command=commencer,
+        text="Commencer", bg=couleur_bg, fg=couleur_fg,
+        activebackground=couleur_abg, activeforeground=couleur_afg,
+        font=font, bd=bouton_bd, relief=bouton_relief
+    ).grid(row=1, column=0, sticky='we')
 
-# Plateau #
-creer_plateau()
-intersections = creer_intersections()
-intersections_bis = intersections.copy()
+    tk.Button(
+        frame_main, command=charger,
+        text="Charger", bg=couleur_bg, fg=couleur_fg,
+        activebackground=couleur_abg, activeforeground=couleur_afg,
+        font=font, bd=bouton_bd, relief=bouton_relief
+    ).grid(row=2, column=0, sticky='we')
 
-# Menu #
-menu = tk.Label(Mafenetre, text="MENU", font=("bold", 50))
-menu.grid(row=0, column=1)
+    tk.Button(
+        frame_main, command=quitter,
+        text="Quitter", bg=couleur_bg, fg='red',
+        activebackground=couleur_abg, activeforeground=couleur_afg,
+        font=font, bd=bouton_bd, relief=bouton_relief
+    ).grid(row=3, column=0, sticky='we')
 
-bouton_sauvegarder = tk.Button(Mafenetre, text="Sauvegarder", font=("bold", 30), command=sauvegarder, relief="groove")
-bouton_sauvegarder.grid(row=1, column=1, sticky="ew")
-
-bouton_recharger = tk.Button(Mafenetre, text="Recharger", font=("bold", 30), command=charger, relief="groove")
-bouton_recharger.grid(row=2, column=1, sticky="ew")
-
-bouton_recommencer = tk.Button(Mafenetre, text="Recommencer", font=("bold", 30), command=recommencer_partie, relief="groove")
-bouton_recommencer.grid(row=3, column=1, sticky="ew")
-
-bouton_quitter = tk.Button(Mafenetre, text="Quitter", font=("bold", 30), command=quitter, relief="groove")
-bouton_quitter.grid(row=4, column=1, sticky="ew")
-
-label_tour = tk.Label(Mafenetre, text="C'est au tour du joueur 1",  font=("bold", 30))
-label_tour.grid(row=0, column=0)
-
-label_score = tk.Label(Mafenetre, text="SCORE",  font=("bold", 30, "underline"))
-label_score.grid(row=5, column=1)
-
-label_score_2 = tk.Label(Mafenetre, text="Joueur 1: 0",  font=("bold", 30))
-label_score_2.grid(row=6, column=1)
-
-label_score_1 = tk.Label(Mafenetre, text="Joueur 2: 0",  font=("bold", 30))
-label_score_1.grid(row=7, column=1)
+    frame_main.grid(row=0, column=0)
 
 
-recommencer_partie()
+def options():
+    global IA_1, IA_2
+    IA_1, IA_2 = tk.IntVar(), tk.IntVar()
 
-## Fin ##
-Mafenetre.mainloop()
+    frame_option = tk.LabelFrame(frame_main, text="Ordinateur", bg=couleur_bg, fg=couleur_fg, font=font)
+
+    tk.Checkbutton(
+        frame_option, selectcolor='black', variable=IA_1,
+        text="Joueur 1", bg=couleur_bg, fg=couleur_fg,
+        activebackground=couleur_bg, activeforeground=couleur_fg,
+        font=font, bd=bouton_bd, relief='flat', justify='center'
+    ).grid(row=0, column=0, sticky='we')
+
+    tk.Checkbutton(
+        frame_option, selectcolor='black', variable=IA_2,
+        text="Joueur 2", bg=couleur_bg, fg=couleur_fg,
+        activebackground=couleur_bg, activeforeground=couleur_fg,
+        font=font, bd=bouton_bd, relief='flat', justify='center'
+    ).grid(row=1, column=0, sticky='we')
+
+    frame_option.grid(row=4, column=0, sticky='we')
+
+
+def pause():
+    global frame_pause
+    frame_pause = tk.LabelFrame(racine, text="Pause", bg=couleur_bg, fg=couleur_fg, font=font)
+
+    tk.Button(
+        frame_pause, command=reprendre,
+        text="Reprendre", bg=couleur_bg, fg=couleur_fg,
+        activebackground=couleur_abg, activeforeground=couleur_afg,
+        font=font, bd=bouton_bd, relief=bouton_relief
+    ).grid(row=1, column=0, sticky='we')
+
+    tk.Button(
+        frame_pause, command=sauvegarder,
+        text="Sauvegarder", bg=couleur_bg, fg=couleur_fg,
+        activebackground=couleur_abg, activeforeground=couleur_afg,
+        font=font, bd=bouton_bd, relief=bouton_relief
+    ).grid(row=2, column=0, sticky='we')
+
+    tk.Button(
+        frame_pause, command=menu,
+        text="Menu", bg=couleur_bg, fg='red',
+        activebackground=couleur_abg, activeforeground=couleur_afg,
+        font=font, bd=bouton_bd, relief=bouton_relief
+    ).grid(row=3, column=0, sticky='we')
+
+    frame_pause.tkraise()
+
+
+# Main #
+
+racine = tk.Tk()
+racine.title("Tapatan")
+# racine.geometry(str(Longueur+4)+"x"+str(Hauteur+4))
+racine.resizable(False, False)
+
+Canevas = tk.Canvas(racine, width=Longueur, height=Hauteur, bg=couleur_bg, bd=0)
+Canevas.grid(row=0, column=0)
+
+main_menu()
+options()
+pause()
+
+racine.mainloop()
+
